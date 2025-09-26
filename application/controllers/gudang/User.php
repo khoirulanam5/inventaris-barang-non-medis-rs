@@ -5,27 +5,18 @@ class User extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->load->model(['UserModel']);
+        isgudang();
     }
 
     public function index() {
         $data['title'] = 'Data User';
-
-        $data['user'] = $this->db->get('tb_user')->result();
+        $data['user'] = $this->UserModel->getAll()->result();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar', $data);
         $this->load->view('gudang/user', $data);
         $this->load->view('template/footer');
-    }
-
-    public function generateIdUser(){
-        $unik = 'U';
-        $kode = $this->db->query("SELECT MAX(id_user) LAST_NO FROM tb_user WHERE id_user LIKE '".$unik."%'")->row()->LAST_NO;
-        $urutan = (int) substr($kode, 1, 3);
-        $urutan++;
-        $huruf = $unik;
-        $kode = $huruf . sprintf("%03s", $urutan);
-        return $kode;
     }
 
     public function add() {
@@ -41,8 +32,8 @@ class User extends CI_Controller {
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Maaf', text:'Username Sudah Digunakan', icon:'warning'})</script>");
             redirect('gudang/user');
         } else {
-            $user = [
-                'id_user' => $this->generateIdUser(),
+            $data = [
+                'id_user' => $this->UserModel->generateId(),
                 'username' => $this->input->post('username'),
                 'password' => $this->input->post('password'),
                 'level' => $this->input->post('level'),
@@ -52,8 +43,7 @@ class User extends CI_Controller {
                 'alamat' => $this->input->post('alamat'),
                 'status' => '1'
             ];
-
-            $this->db->insert('tb_user', $user);
+            $this->UserModel->save($data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Tambah data berhasil', icon:'success'})</script>");
             redirect('gudang/user');
@@ -72,7 +62,7 @@ class User extends CI_Controller {
         if($this->form_validation->run() == FALSE) {
             redirect('gudang/user');
         } else {
-            $user = [
+            $data = [
                 'username' => $this->input->post('username'),
                 'password' => $this->input->post('password'),
                 'level' => $this->input->post('level'),
@@ -82,9 +72,7 @@ class User extends CI_Controller {
                 'alamat' => $this->input->post('alamat'),
                 'status' => '1'
             ];
-
-            $this->db->where('id_user', $id_user);
-            $this->db->update('tb_user', $user);
+            $this->UserModel->edit($id_user, $data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Update data berhasil', icon:'success'})</script>");
             redirect('gudang/user');
@@ -92,29 +80,21 @@ class User extends CI_Controller {
     }
 
     public function delete($id_user) {
-
-        $this->db->where('id_user', $id_user);
-        $this->db->delete('tb_user');
+        $this->UserModel->delete($id_user);
     
         $this->session->set_flashdata("pesan", "<script>Swal.fire({title:'Berhasil', text:'Data berhasil dihapus', icon:'success'})</script>");
         redirect('gudang/user');
     }
 
     public function aktivasi($id_user) {
-
-        $this->db->set('status', '1');
-        $this->db->where('id_user', $id_user);
-        $this->db->update('tb_user');
+        $this->UserModel->active($id_user);
 
         $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Aktivasi berhasil', icon:'success'})</script>");
         redirect('gudang/user');
     }    
 
     public function nonaktivasi($id_user) {
-
-        $this->db->set('status', '0');
-        $this->db->where('id_user', $id_user);
-        $this->db->update('tb_user');
+        $this->UserModel->nonactive($id_user);
 
         $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Akun berhasil dinonaktifkan', icon:'success'})</script>");
         redirect('gudang/user');

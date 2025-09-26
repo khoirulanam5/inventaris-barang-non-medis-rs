@@ -81,7 +81,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form action="<?= base_url('gudang/kategori/edit/'.$value->id_kategori) ?>" method="post" enctype="multipart/form-data">
+        <form action="<?= base_url('gudang/kategori/edit/' . $value->id_kategori) ?>" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Nama Kategori</label>
                     <textarea name="nm_kategori" id="nm_kategori" class="form-control" value="<?= $value->nm_kategori ?>" required></textarea>

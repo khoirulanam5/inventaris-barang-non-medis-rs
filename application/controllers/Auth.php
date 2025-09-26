@@ -32,7 +32,6 @@ class Auth extends CI_Controller {
                         'password' => $cek->password,
                         'level' => $cek->level
                     ];
-                    
                     $this->session->set_userdata($ses);
 
                     if ($cek->level == 'staf gudang') {

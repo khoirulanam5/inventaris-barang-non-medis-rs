@@ -5,27 +5,18 @@ class Kategori extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->load->model(['KategoriModel']);
+        isgudang();
     }
 
     public function index() {
         $data['title'] = 'Data Kategori Barang';
-
-        $data['kategori'] = $this->db->get('tb_kategori')->result();
+        $data['kategori'] = $this->KategoriModel->getAll()->result();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar', $data);
         $this->load->view('gudang/kategori', $data);
         $this->load->view('template/footer');
-    }
-
-    public function generateId(){
-        $unik = 'K';
-        $kode = $this->db->query("SELECT MAX(id_kategori) LAST_NO FROM tb_kategori WHERE id_kategori LIKE '".$unik."%'")->row()->LAST_NO;
-        $urutan = (int) substr($kode, 1, 3);
-        $urutan++;
-        $huruf = $unik;
-        $kode = $huruf . sprintf("%03s", $urutan);
-        return $kode;
     }
 
     public function add() {
@@ -36,11 +27,10 @@ class Kategori extends CI_Controller {
             redirect('gudang/kategori');
         } else {
             $data = [
-                'id_kategori' => $this->generateId(),
+                'id_kategori' => $this->KategoriModel->generateId(),
                 'nm_kategori' => $this->input->post('nm_kategori')
             ];
-
-            $this->db->insert('tb_kategori', $data);
+            $this->KategoriModel->save($data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Tambah data berhasil', icon:'success'})</script>");
             redirect('gudang/kategori');
@@ -56,9 +46,7 @@ class Kategori extends CI_Controller {
             $data = [
                 'nm_kategori' => $this->input->post('nm_kategori')
             ];
-
-            $this->db->where('id_kategori', $id_kategori);
-            $this->db->update('tb_kategori', $data);
+            $this->KategoriModel->edit($id_kategori, $data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Update data berhasil', icon:'success'})</script>");
             redirect('gudang/kategori');
@@ -66,9 +54,7 @@ class Kategori extends CI_Controller {
     }
 
     public function delete($id_kategori) {
-
-        $this->db->where('id_kategori', $id_kategori);
-        $this->db->delete('tb_kategori');
+        $this->KategoriModel->delete($id_kategori);
     
         $this->session->set_flashdata("pesan", "<script>Swal.fire({title:'Berhasil', text:'Data berhasil dihapus', icon:'success'})</script>");
         redirect('gudang/kategori');

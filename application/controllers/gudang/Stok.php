@@ -5,32 +5,19 @@ class Stok extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->load->model(['StokModel', 'BarangModel']);
+        isgudang();
     }
 
     public function index() {
         $data['title'] = 'Data Stok Barang';
-
-        $this->db->select('tb_stok.*, tb_barang.*');
-        $this->db->from('tb_stok');
-        $this->db->join('tb_barang', 'tb_stok.id_barang = tb_barang.id_barang');
-        $data['stok'] = $this->db->get()->result();
-
-        $data['barang'] = $this->db->get('tb_barang')->result();
+        $data['stok'] = $this->StokModel->getAll()->result();
+        $data['barang'] = $this->BarangModel->getSelect()->result();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar', $data);
         $this->load->view('gudang/stok', $data);
         $this->load->view('template/footer');
-    }
-
-    public function generateId(){
-        $unik = 'S';
-        $kode = $this->db->query("SELECT MAX(id_stok) LAST_NO FROM tb_stok WHERE id_stok LIKE '".$unik."%'")->row()->LAST_NO;
-        $urutan = (int) substr($kode, 1, 3);
-        $urutan++;
-        $huruf = $unik;
-        $kode = $huruf . sprintf("%03s", $urutan);
-        return $kode;
     }
 
     public function add() {
@@ -41,12 +28,11 @@ class Stok extends CI_Controller {
             redirect('gudang/stok');
         } else {
             $data = [
-                'id_stok' => $this->generateId(),
+                'id_stok' => $this->StokModel->generateId(),
                 'id_barang' => $this->input->post('id_barang'),
                 'jumlah'=> $this->input->post('jumlah')
             ];
-
-            $this->db->insert('tb_stok', $data);
+            $this->StokModel->save($data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Tambah data berhasil', icon:'success'})</script>");
             redirect('gudang/stok');
@@ -64,9 +50,7 @@ class Stok extends CI_Controller {
                 'id_barang' => $this->input->post('id_barang'),
                 'jumlah'=> $this->input->post('jumlah')
             ];
-
-            $this->db->where('id_stok', $id_stok);
-            $this->db->update('tb_stok', $data);
+            $this->StokModel->edit($id_stok, $data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Update data berhasil', icon:'success'})</script>");
             redirect('gudang/stok');
@@ -74,8 +58,7 @@ class Stok extends CI_Controller {
     }
 
     public function delete($id_stok) {
-        $this->db->where('id_stok', $id_stok);
-        $this->db->delete('tb_stok');
+        $this->StokModel->delete($id_stok);
 
         $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Hapus data berhasil', icon:'success'})</script>");
         redirect('gudang/stok');

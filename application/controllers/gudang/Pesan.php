@@ -5,17 +5,13 @@ class Pesan extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->load->model(['PesananModel', 'StokModel']);
+        isgudang();
     }
 
     public function index() {
         $data['title'] = 'Data Pesanan';
-
-        $this->db->select('tb_pesanan.*, tb_user.nm_pengguna, tb_barang.nm_barang, tb_unit.nm_unit');
-        $this->db->from('tb_pesanan');
-        $this->db->join('tb_user', 'tb_pesanan.id_user = tb_user.id_user');
-        $this->db->join('tb_barang', 'tb_pesanan.id_barang = tb_barang.id_barang');
-        $this->db->join('tb_unit', 'tb_pesanan.id_unit = tb_unit.id_unit');
-        $data['pesanan'] = $this->db->get()->result();
+        $data['pesanan'] = $this->PesananModel->getAll()->result();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar', $data);
@@ -25,17 +21,11 @@ class Pesan extends CI_Controller {
 
     public function kirim($id_pesanan) {
         // Ambil daftar barang yang dipesan berdasarkan id_pesanan
-        $pesanan = $this->db->select('id_barang, jml_pesan')
-                            ->from('tb_pesanan') // Asumsi tabel pesanan
-                            ->where('id_pesanan', $id_pesanan)
-                            ->get()->result();
+        $pesanan = $this->PesananModel->getBarang($id_pesanan)->result();
     
         foreach ($pesanan as $item) {
             // Ambil stok barang dari tabel tb_stok
-            $stok = $this->db->select('jumlah')
-                             ->from('tb_stok')
-                             ->where('id_barang', $item->id_barang)
-                             ->get()->row();
+            $stok = $this->StokModel->getJumlah($item->id_barang)->row();
     
             // Cek jika stok kurang dari jumlah pesanan
             if ($stok && $stok->jumlah < $item->jml_pesan) {
@@ -47,15 +37,11 @@ class Pesan extends CI_Controller {
     
         // Jika stok cukup, lanjutkan update stok
         foreach ($pesanan as $item) {
-            $this->db->set('jumlah', 'jumlah - ' . (int)$item->jml_pesan, FALSE);
-            $this->db->where('id_barang', $item->id_barang);
-            $this->db->update('tb_stok');
+            $this->StokModel->update($item);
         }
     
         // Update status pesanan menjadi 'dikirim'
-        $this->db->set('status', 'dikirim');
-        $this->db->where('id_pesanan', $id_pesanan);
-        $this->db->update('tb_pesanan');
+        $this->PesananModel->update($id_pesanan);
     
         // Notifikasi sukses
         $this->session->set_flashdata("pesan", "<script> Swal.fire({title:'Berhasil', text:'Pesanan barang berhasil dikirim ke unit', icon:'success'})</script>");
