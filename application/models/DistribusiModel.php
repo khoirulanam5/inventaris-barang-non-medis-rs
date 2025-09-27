@@ -37,9 +37,22 @@ class DistribusiModel extends CI_Model {
 
     public function getAll() {
         $this->db->select('tb_distribusi.*, tb_user.nm_pengguna, tb_barang.nm_barang');
-        $this->db->from('tb_distribusi');
+        $this->db->from($this->_table);
         $this->db->join('tb_user', 'tb_distribusi.id_user = tb_user.id_user');
         $this->db->join('tb_barang', 'tb_distribusi.id_barang = tb_barang.id_barang');
         return $this->db->get();
+    }
+
+    public function getBarang($id_distribusi) {
+        $this->db->select('id_barang, jml_distribusi');
+        $this->db->from($this->_table);
+        $this->db->where('id_distribusi', $id_distribusi);
+        return $this->db->get();
+    }
+
+    public function update($id_distribusi) {
+        $this->db->set('status', 'dikirim');
+        $this->db->where('id_distribusi', $id_distribusi);
+        return $this->db->update($this->_table);
     }
 }

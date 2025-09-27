@@ -37,7 +37,7 @@ class Pesan extends CI_Controller {
     
         // Jika stok cukup, lanjutkan update stok
         foreach ($pesanan as $item) {
-            $this->StokModel->update($item);
+            $this->StokModel->down($item);
         }
     
         // Update status pesanan menjadi 'dikirim'

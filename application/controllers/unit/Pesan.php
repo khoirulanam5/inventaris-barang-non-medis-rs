@@ -5,36 +5,20 @@ class Pesan extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->load->model(['PesananModel', 'BarangModel', 'UnitModel']);
+        isunit();
     }
 
     public function index() {
         $data['title'] = 'Data Pesanan';
-
-        $this->db->select('tb_pesanan.*, tb_user.nm_pengguna, tb_barang.nm_barang, tb_unit.nm_unit');
-        $this->db->from('tb_pesanan');
-        $this->db->join('tb_user', 'tb_pesanan.id_user = tb_user.id_user');
-        $this->db->join('tb_barang', 'tb_pesanan.id_barang = tb_barang.id_barang');
-        $this->db->join('tb_unit', 'tb_pesanan.id_unit = tb_unit.id_unit');
-        $data['pesanan'] = $this->db->get()->result();
-
-        $data['barang'] = $this->db->get('tb_barang')->result();
-        
-        $data['unit'] = $this->db->get('tb_unit')->result();
+        $data['pesanan'] = $this->PesananModel->getAll()->result();
+        $data['barang'] = $this->BarangModel->getSelect()->result();
+        $data['unit'] = $this->UnitModel->getAll()->result();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar', $data);
         $this->load->view('unit/pesan', $data);
         $this->load->view('template/footer');
-    }
-
-    public function generateId() {
-        $unik = 'P';
-        $kode = $this->db->query("SELECT MAX(id_pesanan) LAST_NO FROM tb_pesanan WHERE id_pesanan LIKE '".$unik."%'")->row()->LAST_NO;
-        $urutan = (int) substr($kode, 1, 3);
-        $urutan++;
-        $huruf = $unik;
-        $kode = $huruf . sprintf("%03s", $urutan);
-        return $kode;
     }
 
     public function add() {
@@ -46,7 +30,7 @@ class Pesan extends CI_Controller {
             redirect('unit/pesan');
         } else {
             $data = [
-                'id_pesanan' => $this->generateId(),
+                'id_pesanan' => $this->PesananModel->generateId(),
                 'id_user' => $this->session->userdata('id_user'),
                 'id_barang' => $this->input->post('id_barang'),
                 'id_unit' => $this->input->post('id_unit'),
@@ -78,9 +62,7 @@ class Pesan extends CI_Controller {
                 'jml_pesan' => $this->input->post('jml_pesan'),
                 'status' => 'proses'
             ];
-
-            $this->db->where('id_pesanan', $id_pesanan);
-            $this->db->update('tb_pesanan', $data);
+            $this->PesananModel->edit($id_pesanan, $data);
 
             $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Update data berhasil', icon:'success'})</script>");
             redirect('unit/pesan');
@@ -88,18 +70,14 @@ class Pesan extends CI_Controller {
     }
 
     public function delete($id_pesanan) {
-
-        $this->db->where('id_pesanan', $id_pesanan);
-        $this->db->delete('tb_pesanan');
+        $this->PesananModel->delete($id_pesanan);
 
         $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Hapus data berhasil', icon:'success'})</script>");
         redirect('unit/pesan');
     }
 
     public function terima($id_pesanan) {
-        $this->db->set('status', 'selesai');
-        $this->db->where('id_pesanan', $id_pesanan);
-        $this->db->update('tb_pesanan');
+        $this->PesananModel->clear($id_pesanan);
 
         $this->session->set_flashdata("pesan","<script> Swal.fire({title:'Berhasil', text:'Konfirmasi berhasil', icon:'success'})</script>");
         redirect('unit/pesan');

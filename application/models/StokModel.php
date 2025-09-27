@@ -31,7 +31,7 @@ class StokModel extends CI_Model {
 
     public function getAll() {
         $this->db->select('tb_stok.*, tb_barang.*');
-        $this->db->from('tb_stok');
+        $this->db->from($this->_table);
         $this->db->join('tb_barang', 'tb_stok.id_barang = tb_barang.id_barang');
         return $this->db->get();
     }
@@ -43,7 +43,13 @@ class StokModel extends CI_Model {
         return $this->db->get();
     }
 
-    public function update($item) {
+    public function up($item) {
+        $this->db->set('jumlah', 'jumlah + ' . (int)$item->jml_distribusi, FALSE);
+        $this->db->where('id_barang', $item->id_barang);
+        return $this->db->update($this->_table);
+    }
+
+    public function down($item) {
         $this->db->set('jumlah', 'jumlah - ' . (int)$item->jml_pesan, FALSE);
         $this->db->where('id_barang', $item->id_barang);
         return $this->db->update($this->_table);
